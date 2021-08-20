@@ -1,7 +1,17 @@
 <script>
 export default {
-  name: "SectionBar",
-  props:["title","tags","href"],
+  name: "SingleSectionBar",
+  props:{
+    title:{
+      type:String,
+      required:true,
+    },
+    tags:Array,
+    href:{
+      type:String,
+      required:true
+    }
+  },
   setup() {
     return {
     };
@@ -17,12 +27,12 @@ export default {
       />{{ title }}
     </h2>
     <div class="tags">
-      <Fragment v-for="(item, index) in tags" :key="item.id">
+      <span v-for="(item, index) in tags" :key="item.id">
         <el-link type="info" style="font-size:0.9em">
           {{ item.name }}
         </el-link>
         <el-divider v-if="index !== tags.length - 1" direction="vertical" />
-      </Fragment>
+      </span>
     </div>
     <div class="more">
       <el-link :href="href" type="info"  style="font-size:0.9em">
@@ -34,10 +44,11 @@ export default {
 <style scoped>
 .bar {
   overflow: hidden;
+  width: 100%;
   border-bottom: 2px solid #c10d0c;
 }
 h2 {
-  padding: 15px 5px 5px 0;
+  padding: 15px 5px 5px 10px;
   float: left;
 }
 .tags {

@@ -12,7 +12,6 @@ export default function (app) {
     // withCredentials: true, // Check cross-site Access-Control
   };
 
-  console.log(process);
   const _axios = axios.create(config);
 
   _axios.interceptors.request.use(

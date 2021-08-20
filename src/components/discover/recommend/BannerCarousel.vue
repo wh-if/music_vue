@@ -1,31 +1,28 @@
 <script>
-import { computed, inject, reactive, ref } from "vue";
+import { computed, inject, ref } from "vue";
 
 export default {
   name: "BannerCarousel",
   async setup() {
     const axios = inject("axios");
-    const state = reactive({
-      banners: [],
-    });
-    const curBanner = ref(0);
-    state.banners = await axios.get("/banner").then((res) => {
+    const banners = await axios.get("/banner").then((res) => {
       return res.banners;
     });
+    const curBanner = ref(0);
 
     const styleBg = computed(() => {
       return {
         backgroundImage:
-          state.banners.length == 0
+          banners.length == 0
             ? ""
-            : `url('${state.banners[curBanner.value].imageUrl}')`,
+            : `url('${banners[curBanner.value].imageUrl}')`,
       };
     });
 
     return {
-      state,
       styleBg,
       curBanner,
+      banners,
     };
   },
 };
@@ -39,7 +36,7 @@ export default {
       height="400px"
       @change="(cur) => (curBanner = cur)"
     >
-      <el-carousel-item v-for="item in state.banners" :key="item.id">
+      <el-carousel-item v-for="item in banners" :key="item.id">
         <el-image :alt="item.targetId" :src="item.imageUrl"></el-image>
       </el-carousel-item>
     </el-carousel>

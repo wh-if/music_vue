@@ -86,7 +86,6 @@ export default {
   background-color: #f2f2f2;
   border-top: 1px solid #d3d3d3;
   padding: 20px 0 35px;
-  margin-top: -1px;
   font-size: 0.8em;
 }
 .copy {

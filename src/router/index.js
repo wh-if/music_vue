@@ -1,11 +1,45 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Discover from '../views/Discover.vue'
-
+ import Recommend from  '../views/discover/Recommend.vue'
 const routes = [
   {
     path: '/',
     name: 'Discover',
-    component: Discover
+    alias: '/discover',
+    component: Discover,
+    children: [
+      {
+        path: '',
+        name: 'Recommend',
+        component : Recommend
+      },
+      {
+        path: 'toplist',
+        name: 'Toplist',
+        component: {}
+      },
+      {
+        path: 'playlist',
+        name: 'Playlist',
+        component: {}
+      },
+
+      {
+        path: 'djradio',
+        name: 'Djradio',
+        component: {}
+      },
+      {
+        path: 'artist',
+        name: 'Artist',
+        component: {}
+      },
+      {
+        path: 'album',
+        name: 'Album',
+        component: {}
+      },
+    ]
   },
   {
     path: '/my',
@@ -18,7 +52,7 @@ const routes = [
   {
     path: '/friend',
     name: 'Friend',
-    component:{}
+    component: {}
   }
 ]
 

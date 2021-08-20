@@ -1,22 +1,24 @@
 <script>
-import { inject, onBeforeMount, ref } from "@vue/runtime-core";
+import { inject } from "@vue/runtime-core";
+import { useStore } from 'vuex';
 export default {
-  name: "RecommendSideBar",
-  setup() {
+  name: "SideBar",
+  async setup() {
     const axios = inject("axios");
-    let singerList = ref([]);
-    let djList=ref([]);
-    onBeforeMount(async () => {
-      singerList.value = await axios.get("/top/artists?limit=5").then((res) => {
-        return res.artists;
-      });
-      djList.value=await axios.get("/dj/toplist?limit=5").then((res) => {
-        return res.toplist;
-      });
+    const store = useStore();
+    let singerList = await axios.get("/top/artists?limit=5").then((res) => {
+      return res.artists;
     });
+    let djList = await axios.get("/dj/toplist?limit=5").then((res) => {
+      return res.toplist;
+    });
+    function showLoginDialog(){
+      store.commit('changeLoginDialogShow')
+    }
     return {
       singerList,
       djList,
+      showLoginDialog
     };
   },
 };
@@ -26,7 +28,7 @@ export default {
   <div class="side-bar">
     <div class="tologin">
       <span>登录网易云音乐，可以享受无限收藏的乐趣，并且无限同步到手机</span>
-      <el-button style="width: 100px" type="danger" plain size="small">
+      <el-button style="width: 100px" @click="showLoginDialog" type="danger" size="small">
         登录
       </el-button>
     </div>
@@ -39,11 +41,18 @@ export default {
       </div>
       <ul class="list">
         <li class="singer-item" v-for="item in singerList" :key="item.id">
-          <el-image style="height:65px;" fit="cover " :alt="item.name" :src="item.picUrl" />
-          <span class="text-overflow" style="padding:0 10px">{{ item.name }}</span>
+          <el-image
+            style="height: 65px"
+            fit="cover "
+            :alt="item.name"
+            :src="item.picUrl"
+          />
+          <span class="text-overflow" style="padding: 0 10px">{{
+            item.name
+          }}</span>
         </li>
       </ul>
-      <el-button  style="display:block;margin:auto">
+      <el-button style="display: block; margin: auto">
         申请成为网易音乐人
       </el-button>
     </div>
@@ -56,32 +65,35 @@ export default {
       </div>
       <ul class="list">
         <li class="dj-item" v-for="item in djList" :key="item.id">
-          <el-image class="dj-item-img" style="height:60px;" fit="cover" :alt="item.name" :src="item.picUrl" />
+          <el-image
+            class="dj-item-img"
+            style="height: 60px"
+            fit="cover"
+            :alt="item.name"
+            :src="item.picUrl"
+          />
           <span class="dj-item-title text-overflow">{{ item.name }}</span>
           <span class="dj-item-dec text-overflow">
-            {{item.rcmdtext}}
+            {{ item.rcmdtext }}
           </span>
         </li>
       </ul>
-      
     </div>
   </div>
 </template>
 <style scoped>
 .side-bar {
-  width: 228px;
+  width: 230px;
+  padding-bottom: 20px;
   border-left: 1px solid #d3d3d3;
- 
-  
 }
 .tologin {
   height: 135px;
   text-align: center;
-  background-image: linear-gradient(to bottom, #fdfdfd, #f89292);
+  background-image: linear-gradient(to bottom, #fdfdfd, #e2e2e2);
   color: gray;
-  font-size: 10px;
+  font-size: 0.8em;
   line-height: 25px;
-  box-sizing: border-box;
   padding: 30px 10px 10px;
 }
 .bar {
@@ -89,50 +101,55 @@ export default {
   margin: 15px 0;
   border-bottom: 1px solid #b2b2b2;
 }
-.box{
+.box {
   margin: 10px;
 }
 .bar > .right {
   float: right;
   font-size: 0.8em;
 }
-.list{
+.list {
   list-style: none;
 }
-.singer-item{
+.singer-item {
   margin: 10px 0;
+  font-size: 0.8em;
   border: 1px solid #e9e9e9;
   background-color: #fafafa;
 }
-.singer-item>*{
+.singer-item > * {
   vertical-align: middle;
   font-size: 1.1em;
 }
-.singer-item:hover{
+.singer-item:hover {
   cursor: pointer;
   background-color: #f1f1f1;
 }
-.dj-item{
+.dj-item {
   margin: 8px 2px;
-  position:relative;
+  position: relative;
 }
-.dj-item:hover{
+.dj-item:hover {
   cursor: pointer;
   background-color: #f1f1f1;
 }
-.dj-item-title{
-  position:absolute;
+.dj-item-title {
+  position: absolute;
   left: 70px;
-  top:7px;
+  top: 7px;
 }
 
-.dj-item-dec{
-  position:absolute;
+.dj-item-dec {
+  position: absolute;
   left: 70px;
-  top:35px;
+  top: 35px;
   color: #999;
   font-size: 0.8em;
 }
-
-
+.text-overflow {
+  width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 </style>
