@@ -10,12 +10,20 @@ export default function (app) {
     baseURL: 'http://localhost:3000',
     timeout: 60 * 1000, // Timeout
     // withCredentials: true, // Check cross-site Access-Control
+    // withCredentials: true,
   };
 
   const _axios = axios.create(config);
 
   _axios.interceptors.request.use(
     function (config) {
+
+      let tag = '?', cookie = sessionStorage.getItem('cookie');
+      if (config.url.includes('?'))
+        tag = '&'
+      if (cookie !== '')
+        config.url += tag + 'timestamp=' + Date.now() + '&cookie=' + cookie;
+
       //   const token = Vue.ls.get(ACCESS_TOKEN)
       const token = localStorage.getItem('token')
       if (token) {

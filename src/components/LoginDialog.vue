@@ -2,7 +2,7 @@
 import { computed, reactive, ref } from "@vue/reactivity";
 import { useStore } from "vuex";
 import { inject, onMounted } from "@vue/runtime-core";
-import {ElMessage} from 'element-plus'
+import { ElMessage } from "element-plus";
 export default {
   name: "LoginDialog",
   setup() {
@@ -17,26 +17,26 @@ export default {
     const loginData = reactive({
       phone: "",
       captcha: "",
-      agree: "",
+      agree: false,
     });
     const loginFormRules = {
       phone: [
         {
           required: true,
           message: "请输入手机号！",
-        }   
+        },
       ],
-      captcha:[
+      captcha: [
         {
-          required:true,
-          message:'请输入验证码！',
-        }
-      ]
+          required: true,
+          message: "请输入验证码！",
+        },
+      ],
     };
 
-    const loginDialogIsShow = computed({
+    let loginDialogIsShow = computed({
       get: () => store.state.loginDialogIsShow,
-      set: () => store.commit("changeLoginDialogShow"),
+      set: () => store.commit("closeLoginDialog"),
     });
     async function getQRCode() {
       QRCode.key = await axios
@@ -47,14 +47,47 @@ export default {
         .then((res) => res.data.qrimg);
     }
     function onSubmit() {
-      if(loginData.agree)
-      axios.get(
-        `/captcha/verify?phone=${loginData.phone}&captcha=${loginData.captcha}`
-      );
-      else ElMessage.error('请勾选同意服务条款、隐私条款和儿童隐私条款！')
+      if (loginData.phone && loginData.captcha) {
+        if (loginData.agree)
+          axios
+            .get(
+              `/login/cellphone?phone=${loginData.phone}&captcha=${loginData.captcha}`
+            )
+            .then((res) => {
+              if (res.code === 200) {
+                ElMessage.success("登录成功！");
+                //保存登录状态
+                sessionStorage.setItem(
+                  "cookie",
+                  encodeURIComponent(res.cookie)
+                );
+                //保存用户信息
+                axios.get("/user/account?uid=" + res.id).then((res) => {
+                  sessionStorage.setItem(
+                    "account",
+                    JSON.stringify(res.account)
+                  );
+                  sessionStorage.setItem(
+                    "profile",
+                    JSON.stringify(res.profile)
+                  );
+                });
+              } else ElMessage.error(res.message);
+              store.commit("changeLoginDialogShow");
+            });
+        else ElMessage.error("请勾选同意服务条款、隐私条款和儿童隐私条款！");
+      } else {
+        ElMessage.error("手机号和验证码不能为空！");
+      }
     }
     function sendCaptcha() {
-      axios.get("/captcha/sent?phone=" + loginData.phone);
+      axios.get("/captcha/sent?phone=" + loginData.phone).then((res) => {
+        if (res.data) {
+          ElMessage.success("验证码发送成功！");
+        } else {
+          ElMessage.error(res.message);
+        }
+      });
     }
 
     onMounted(() => {

@@ -1,6 +1,6 @@
 <script>
 import { inject } from "@vue/runtime-core";
-import { useStore } from 'vuex';
+import { useStore } from "vuex";
 export default {
   name: "SideBar",
   async setup() {
@@ -12,13 +12,20 @@ export default {
     let djList = await axios.get("/dj/toplist?limit=5").then((res) => {
       return res.toplist;
     });
-    function showLoginDialog(){
-      store.commit('changeLoginDialogShow')
+    function showLoginDialog() {
+      store.commit("openLoginDialog");
+    }
+    function test() {
+      axios.get("/user/account?uid=81233558").then((res) => {
+        sessionStorage.setItem("account", JSON.stringify(res.account));
+        sessionStorage.setItem("profile", JSON.stringify(res.profile));
+      });
     }
     return {
       singerList,
       djList,
-      showLoginDialog
+      showLoginDialog,
+      test,
     };
   },
 };
@@ -28,7 +35,12 @@ export default {
   <div class="side-bar">
     <div class="tologin">
       <span>登录网易云音乐，可以享受无限收藏的乐趣，并且无限同步到手机</span>
-      <el-button style="width: 100px" @click="showLoginDialog" type="danger" size="small">
+      <el-button
+        style="width: 100px"
+        @click="showLoginDialog"
+        type="danger"
+        size="small"
+      >
         登录
       </el-button>
     </div>
@@ -52,7 +64,7 @@ export default {
           }}</span>
         </li>
       </ul>
-      <el-button style="display: block; margin: auto">
+      <el-button style="display: block; margin: auto" @click="test">
         申请成为网易音乐人
       </el-button>
     </div>

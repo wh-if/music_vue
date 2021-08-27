@@ -1,34 +1,56 @@
 <script>
-import { ref } from "vue";
-import { useStore } from 'vuex';
+import { computed, reactive, ref } from "vue";
+import { useStore } from "vuex";
+import { useRoute, useRouter } from "vue-router";
 
 export default {
   name: "MainHeader",
   setup() {
-    const menu = [
+    const menu = reactive([
       {
-        id: 0,
         name: "发现音乐",
-        subMenu: ["推荐", "排行榜", "歌单", "主播电台", "歌手", "新碟上架"],
+        route: "/discover",
+        subMenu: [
+          { name: "推荐", route: "/" },
+          { name: "排行榜", route: "/toplist" },
+          { name: "歌单", route: "/playlist" },
+          { name: "歌手", route: "/artist" },
+          { name: "新碟上架", route: "/album" },
+        ],
       },
-      { id: 1, name: "我的音乐", subMenu: {} },
-      { id: 2, name: "朋友", subMenu: {} },
-      { id: 3, name: "商城", subMenu: {} },
-      { id: 4, name: "音乐人", subMenu: {} },
-      { id: 5, name: "下载客户端", subMenu: {} },
-    ];
-    const activeMenu = ref(0);
-    const isLogin = ref(false);
-    const store = useStore()
+      { name: "我的音乐", route: "/my" },
+      { name: "朋友", route: "/friend" },
+      { name: "商城", route: "/store" },
+      { name: "音乐人", route: "/musician" },
+    ]);
+    const route = useRoute();
 
-    function showLoginDialog(){
-      store.commit('changeLoginDialogShow')
+    const store = useStore();
+    const router = useRouter();
+    const keyword = ref("");
+
+    function showLoginDialog() {
+      store.commit("openLoginDialog");
     }
+
+    const subHeader = computed(() => {
+      return "/" === route.path || route.path.startsWith("/discover")
+        ? menu[0].subMenu
+        : [];
+    });
+
+    const avatarUrl = computed(() => {
+      let profile = JSON.parse(sessionStorage.getItem("profile"));
+      return profile ? profile.avatarUrl : "";
+    });
+
     return {
       menu,
+      keyword,
       showLoginDialog,
-      isLogin,
-      activeMenu,
+      avatarUrl,
+      subHeader,
+      router,
     };
   },
 };
@@ -37,38 +59,61 @@ export default {
   <header class="header">
     <h1 class="logo"></h1>
     <el-menu class="menu" background-color="#242424" mode="horizontal">
-      <el-menu-item
-        class="menu-item"
-        v-for="item in menu"
-        @click="activeMenu = item.id"
-        :key="item.id"
+      <router-link
+        v-for="(item, index) in menu"
+        :key="index"
+        custom
+        :to="item.route"
+        v-slot="{ navigate, isActive }"
       >
-        {{ item.name }}
-        <span v-show="item.id === activeMenu" class="arrow"></span>
-      </el-menu-item>
+        <el-menu-item class="menu-item" @click="navigate">
+          {{ item.name }}
+          <span v-show="isActive" class="arrow"></span>
+        </el-menu-item>
+      </router-link>
     </el-menu>
     <div class="right">
       <el-input
         class="input"
-        placeholder="音乐/视频/电台/用户"
+        placeholder="音乐/歌手/用户"
         prefix-icon="el-icon-search"
         size="small"
-        v-model="input2"
+        v-model="keyword"
       />
       <el-button round size="small">创作者中心</el-button>
 
-      <el-avatar v-show="isLogin" class="right" :size="40" :src="circleUrl" />
-      <el-button type="text" @click="showLoginDialog" v-show="!isLogin">登录</el-button>
+      <el-avatar
+        v-show="avatarUrl"
+        style="vertical-align: middle"
+        :size="40"
+        :src="avatarUrl"
+      />
+      <el-button type="text" @click="showLoginDialog" v-show="!avatarUrl"
+        >登录</el-button
+      >
     </div>
   </header>
   <ul class="sub-header">
-    <li
-      class="sub-item"
-      v-for="(item, index) in menu[activeMenu].subMenu"
+    <router-link
+      v-for="(item, index) in subHeader"
       :key="index"
+      replace
+      custom
+      :to="'/discover' + item.route"
+      v-slot="{ navigate, isExactActive }"
     >
-      {{ item }}
-    </li>
+      <li
+        class="sub-item"
+        :style="
+          isExactActive
+            ? { backgroundColor: 'rgba(0, 0, 0, 0.3)', borderRadius: '10px' }
+            : {}
+        "
+        @click="navigate"
+      >
+        {{ item.name }}
+      </li>
+    </router-link>
   </ul>
 </template>
 

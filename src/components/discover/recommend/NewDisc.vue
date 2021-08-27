@@ -7,8 +7,8 @@ export default {
   async setup() {
     const axios = inject("axios");
     //新碟上架
-    let cdList = await axios.get("/album/list?limit=10").then((res) => {
-      return res.products;
+    let cdList = await axios.get("/album/newest").then((res) => {
+      return res.albums.slice(0,10);
     });
 
     let arrow = ref(0);
@@ -46,14 +46,14 @@ export default {
             <div
               class="cd-list-item"
               v-for="item in cdList.slice(0, 5)"
-              :key="item.albumId"
+              :key="item.id"
             >
               <div class="cd-list-item-img-div">
-                <img width="100" :src="item.coverUrl" />
+                <img width="100" :src="item.picUrl" />
               </div>
-              <p class="text-overflow">{{ item.albumName }}</p>
+              <p class="text-overflow">{{ item.name }}</p>
               <p class="text-overflow" style="color: gray">
-                {{ item.artistName }}
+                {{ item.artist.name }}
               </p>
             </div>
           </div>
@@ -63,14 +63,14 @@ export default {
             <div
               class="cd-list-item"
               v-for="item in cdList.slice(5)"
-              :key="item.albumId"
+              :key="item.id"
             >
               <div class="cd-list-item-img-div">
-                <img width="100" :src="item.coverUrl" />
+                <img width="100" :src="item.picUrl" />
               </div>
-              <p class="text-overflow">{{ item.albumName }}</p>
+              <p class="text-overflow">{{ item.name }}</p>
               <p class="text-overflow" style="color: gray">
-                {{ item.artistName }}
+                {{ item.artist.name }}
               </p>
             </div>
           </div>

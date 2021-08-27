@@ -1,6 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Discover from '../views/Discover.vue'
- import Recommend from  '../views/discover/Recommend.vue'
+import DiscoverRecommend from '../views/discover/Recommend.vue'
+import DiscoverTopList from '../views/discover/TopList.vue'
+import DiscoverPlaylist from '../views/discover/PlayList.vue'
+import DiscoverArtist from '../views/discover/Artist.vue'
+import DiscoverAlbum from '../views/discover/Album.vue'
+import MyArtistList from '../views/my/ArtistList.vue'
+import MyPlayList from "../views/my/PlayList.vue";
+
 const routes = [
   {
     path: '/',
@@ -11,33 +18,27 @@ const routes = [
       {
         path: '',
         name: 'Recommend',
-        component : Recommend
+        component: DiscoverRecommend
       },
       {
         path: 'toplist',
         name: 'Toplist',
-        component: {}
+        component: DiscoverTopList
       },
       {
         path: 'playlist',
         name: 'Playlist',
-        component: {}
-      },
-
-      {
-        path: 'djradio',
-        name: 'Djradio',
-        component: {}
+        component: DiscoverPlaylist
       },
       {
         path: 'artist',
         name: 'Artist',
-        component: {}
+        component: DiscoverArtist
       },
       {
         path: 'album',
         name: 'Album',
-        component: {}
+        component: DiscoverAlbum
       },
     ]
   },
@@ -47,11 +48,31 @@ const routes = [
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
+    component: () => import(/* webpackChunkName: "about" */ '../views/My.vue'),
+    children: [
+      {
+        path: '',
+        name: 'ArtistList',
+        alias: '/artist',
+        component: MyArtistList
+      }, {
+        path: 'playlist',
+        name: 'PlayList',
+        component: MyPlayList
+      }
+    ]
   },
   {
     path: '/friend',
     name: 'Friend',
+    component: () => import('../views/Friend.vue')
+  }, {
+    path: '/store',
+    name: 'Store',
+    component: {}
+  }, {
+    path: '/musician',
+    name: 'Musician',
     component: {}
   }
 ]
