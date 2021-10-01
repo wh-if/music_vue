@@ -1,23 +1,36 @@
 <script>
 import { inject, shallowReactive } from "@vue/runtime-core";
+import { useStore } from "vuex";
 export default {
   name: "ListContent",
   async setup() {
     const axios = inject("axios");
     const state = shallowReactive({ res: {} });
+    const store = useStore();
     const catList = await axios.get("/playlist/catlist").then((res) => res);
     state.res = await axios.get("/top/playlist?limit=35").then((res) => res);
 
-    console.log(state.res);
     async function handlePageChange(index) {
       state.res = await axios
         .get("/top/playlist?limit=35&offset=" + (index - 1) * 35)
         .then((res) => res);
     }
+
+    //添加到播放列表
+    async function handlePlayList(val) {
+      let songs = await axios
+        .get("/playlist/detail?id=" + val)
+        .then((res) => res.playlist);
+      let s = songs.trackIds.map((item) => item.id);
+      store.commit("changePlaySongList", {
+        source: s,
+      });
+    }
     return {
       state,
       catList,
       handlePageChange,
+      handlePlayList,
     };
   },
 };
@@ -50,7 +63,13 @@ export default {
               ? Math.floor(item.playCount / 10000) + "万"
               : item.playCount
           }}</span>
-          <el-link type="info" title="播放" style="float: right">
+          <el-link
+            type="info"
+            title="播放"
+            href="javascript:;"
+            @click="handlePlayList(item.id)"
+            style="float: right"
+          >
             <i class="el-icon-video-play" />
           </el-link>
         </div>

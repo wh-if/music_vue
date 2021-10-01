@@ -36,7 +36,7 @@ export default {
 
     let loginDialogIsShow = computed({
       get: () => store.state.loginDialogIsShow,
-      set: () => store.commit("closeLoginDialog"),
+      set: () => store.commit("changeLoginDialog", { type: false }),
     });
     async function getQRCode() {
       QRCode.key = await axios
@@ -56,24 +56,20 @@ export default {
             .then((res) => {
               if (res.code === 200) {
                 ElMessage.success("登录成功！");
-                //保存登录状态
-                sessionStorage.setItem(
-                  "cookie",
-                  encodeURIComponent(res.cookie)
-                );
+                //保存用户标识
+                sessionStorage.setItem("token", encodeURIComponent(res.token));
                 //保存用户信息
                 axios.get("/user/account?uid=" + res.id).then((res) => {
-                  sessionStorage.setItem(
-                    "account",
-                    JSON.stringify(res.account)
-                  );
                   sessionStorage.setItem(
                     "profile",
                     JSON.stringify(res.profile)
                   );
+                  //修改登录状态
+                  store.commit("changeLoginStatus", { type: true });
                 });
               } else ElMessage.error(res.message);
-              store.commit("changeLoginDialogShow");
+              //关闭登录对话框
+              store.commit("changeLoginDialog", { type: false });
             });
         else ElMessage.error("请勾选同意服务条款、隐私条款和儿童隐私条款！");
       } else {
@@ -108,6 +104,8 @@ export default {
 </script>
 <template>
   <el-dialog
+    title="登录"
+    center
     custom-class="login-dialog"
     v-model="loginDialogIsShow"
     width="640px"
@@ -160,9 +158,6 @@ export default {
         </el-form-item>
       </el-form>
     </div>
-    <template #title>
-      <h3 style="color: white">登录</h3>
-    </template>
     <template #footer style="padding-bottom: 0; position: relative">
       <img
         style="cursor: pointer; position: absolute; right: 0; bottom: 0"
@@ -214,9 +209,6 @@ export default {
 }
 </style>
 <style>
-.login-dialog > .el-dialog__header {
-  background-color: #242424;
-}
 .login-dialog > .el-dialog__footer {
   padding: 0;
 }

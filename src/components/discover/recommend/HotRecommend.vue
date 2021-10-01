@@ -1,11 +1,13 @@
 <script>
 import { inject } from "@vue/runtime-core";
 import SingleSectionBar from "../../SingleSectionBar.vue";
+import { useStore } from "vuex";
 export default {
   components: { SingleSectionBar },
   name: "HotRecommend",
   async setup() {
     const axios = inject("axios");
+    const store = useStore();
     //热门推荐标签
     let hotTags = await axios.get("/playlist/hot").then((res) => {
       return res.tags;
@@ -15,8 +17,20 @@ export default {
     let listItems = await axios.get("/personalized?limit=10").then((res) => {
       return res.result;
     });
+
+    //添加到播放列表
+    async function handlePlayList(val) {
+      let songs = await axios
+        .get("/playlist/detail?id=" + val)
+        .then((res) => res.playlist);
+      let s = songs.trackIds.map((item) => item.id);
+      store.commit("changePlaySongList", {
+        source: s,
+      });
+    }
     return {
       listItems,
+      handlePlayList,
       hotTags,
     };
   },
@@ -24,7 +38,11 @@ export default {
 </script>
 <template>
   <section>
-    <SingleSectionBar title="热门推荐" :tags="hotTags" :href="''" />
+    <SingleSectionBar
+      title="热门推荐"
+      :tags="hotTags"
+      href="/discover/playlist"
+    />
     <div class="main">
       <div class="item" v-for="item in listItems" :key="item.id">
         <div
@@ -38,7 +56,13 @@ export default {
                 ? Math.floor(item.playCount / 10000) + "万"
                 : item.playCount
             }}</span>
-            <el-link type="info" title="播放" style="float: right">
+            <el-link
+              type="info"
+              title="播放"
+              href="javascript:;"
+              @click="handlePlayList(item.id)"
+              style="float: right"
+            >
               <i class="el-icon-video-play" />
             </el-link>
           </div>

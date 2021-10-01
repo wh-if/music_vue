@@ -1,20 +1,15 @@
 <script>
-import { reactive, ref } from "@vue/reactivity";
-import {
-  inject,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  watch,
-} from "@vue/runtime-core";
+import { ref, shallowReactive } from "@vue/reactivity";
+import { inject, onBeforeUnmount, onMounted, watch } from "@vue/runtime-core";
 import { useStore } from "vuex";
+import { ElMessage } from "element-plus";
 export default {
   name: "MusicPlayer",
   setup() {
     const audio = ref({});
     const store = useStore();
     const axios = inject("axios");
-    const state = reactive({
+    const state = shallowReactive({
       src: "", //源文件
       songName: "", //歌曲名
       songPic:
@@ -23,35 +18,16 @@ export default {
       duration: "", //歌曲格式化时长
       paused: true, //播放状态（是否暂停）
       sliderPosition: 0, //当前播放进度点
+      listDrawer: false, //播放列表显示
+      playSongList: [],
     });
     let interval; //定时器
     //监听歌曲切换
     watch(
-      () => store.state.playSongId,
-      async (id) => {
-        state.src = await axios
-          .get("/song/url?id=" + id)
-          .then((res) => res.data[0].url);
-        let res = await axios
-          .get("/song/detail?ids=" + id)
-          .then((res) => res.songs[0]);
-        [
-          state.songName,
-          state.songPic,
-          state.songArtist,
-          state.sliderPosition,
-        ] = [res.name, res.al.picUrl, res.ar[0].name, 0];
-        await nextTick();
-        state.duration =
-          Math.floor(audio.value.duration / 60).toString() +
-          ":" +
-          Math.floor(audio.value.duration % 60).toString();
-        state.paused = false;
-      },
-      {
-        immediate: true,
-      }
+      () => [store.state.playSongList, store.state.playSongIndex],
+      ([list, index]) => handleSongChange(list, index, false)
     );
+
     //监听播放状态变化
     watch(
       () => state.paused,
@@ -77,15 +53,93 @@ export default {
     function handleSliderMove(val) {
       audio.value.currentTime = Math.floor((val / 100) * audio.value.duration);
     }
-    onMounted(() => {});
+    onMounted(async () => {
+      // console.log(store.state.playSongList.toString());
+
+      handleSongChange(
+        store.state.playSongList,
+        store.state.playSongIndex,
+        true
+      );
+    });
+    //响应歌曲切换
+    async function handleSongChange(list, index, paused) {
+      if (list.length == 0) return;
+      state.src = await axios.get("/song/url?id=" + list[index]).then((res) => {
+        if (res.data[0].code == 200) return res.data[0].url;
+        else {
+          ElMessage.error("当前歌曲资源不存在，请切换歌曲！");
+          return "404";
+        }
+      });
+      let res = await axios
+        .get("/song/detail?ids=" + list[index])
+        .then((res) => res.songs[0]);
+      [state.songName, state.songPic, state.songArtist, state.sliderPosition] =
+        [res.name, res.al.picUrl, res.ar[0].name, 0];
+      // console.log(state.src);
+      if (state.src == "404") {
+        handleChangeBtn(true);
+      } else {
+        setTimeout(() => {
+          if (isNaN(audio.value.duration)) {
+            state.duration = "";
+            state.paused = true;
+            return;
+          }
+          state.duration =
+            Math.floor(audio.value.duration / 60).toString() +
+            ":" +
+            Math.floor(audio.value.duration % 60).toString();
+          state.paused = paused;
+        }, 500);
+      }
+    }
+
+    //监听播放列表变化
+    watch(
+      () => store.state.playSongList,
+      async (list) => {
+        if (list.length == 0) return;
+        state.playSongList = await axios
+          .get("/song/detail?ids=" + list.toString())
+          .then((res) => res.songs);
+      },
+      {
+        immediate: true,
+      }
+    );
 
     onBeforeUnmount(() => {
       clearInterval(interval);
     });
+    //处理上一首、下一首事件
+    function handleChangeBtn(isNext) {
+      let i = store.state.playSongIndex;
+      if (isNext) {
+        if (i + 1 === store.state.playSongList.length)
+          store.commit("changePlaySong", { index: 0 });
+        else store.commit("changePlaySong", { index: i + 1 });
+      } else {
+        if (i === 0)
+          store.commit("changePlaySong", {
+            index: store.state.playSongList.length - 1,
+          });
+        else store.commit("changePlaySong", { index: i - 1 });
+      }
+    }
+    function listItemPlay(val) {
+      // console.log(val);
+      store.commit("changePlaySong", {
+        index: val,
+      });
+    }
     return {
       audio,
       state,
       handleSliderMove,
+      handleChangeBtn,
+      listItemPlay,
     };
   },
 };
@@ -95,7 +149,11 @@ export default {
   <div class="player-box">
     <div class="main-container">
       <div class="control-btns">
-        <a href="javascript:;" class="prev-btn"></a>
+        <a
+          href="javascript:;"
+          class="prev-btn"
+          @click="handleChangeBtn(false)"
+        ></a>
         <a
           href="javascript:;"
           class="play-btn"
@@ -106,7 +164,11 @@ export default {
           "
           @click="state.paused = !state.paused"
         ></a>
-        <a href="javascript:;" class="next-btn"></a>
+        <a
+          href="javascript:;"
+          class="next-btn"
+          @click="handleChangeBtn(true)"
+        ></a>
       </div>
       <audio ref="audio" class="audio" :src="state.src"></audio>
       <el-slider
@@ -141,12 +203,42 @@ export default {
           class="volume-btn"
         ></a>
         <a href="javascript:;" class="loop-btn"></a>
-        <a href="javascript:;" class="list-btn"></a>
+        <a
+          href="javascript:;"
+          class="list-btn"
+          @click="state.listDrawer = true"
+        ></a>
       </div>
     </div>
-    <div class="lock">
-      <span></span>
-    </div>
+    <el-dialog title="播放列表" width="950px" center v-model="state.listDrawer">
+      <el-table size="small" height="600px" :data="state.playSongList">
+        <el-table-column type="index"> </el-table-column>
+        <el-table-column label="歌名">
+          <template #default="scope">
+            <img
+              width="50"
+              :src="scope.row.al.picUrl"
+              :alt="scope.row.al.name"
+              style="vertical-align: middle"
+            />
+            <span class="text-overflow">{{ scope.row.name }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="ar[0].name" label="歌手"></el-table-column>
+        <el-table-column prop="al.name" label="专辑"></el-table-column>
+        <el-table-column label="操作">
+          <template #default="row">
+            <el-link
+              icon="el-icon-video-play"
+              href="javascript:;"
+              @click="listItemPlay(row.$index)"
+            ></el-link>
+            <el-link icon="el-icon-plus" style="margin: 0 20px"></el-link>
+            <el-link icon="el-icon-share"></el-link>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 <style scoped>
@@ -154,6 +246,7 @@ export default {
   width: 100%;
   background: transparent;
   position: fixed;
+  z-index: 99;
   bottom: 0;
   height: 52px;
   background-image: url("../assets/playbar.png");
@@ -165,15 +258,6 @@ export default {
   align-items: center;
   margin: 5px auto 0;
 }
-/* .lock {
-  height: 67px;
-  width: 52px;
-  background-image: url("../assets/playbar.png");
-  background-position: 0 -380px;
-  position: absolute;
-  right: 100px;
-  top: -15px;
-} */
 
 .control-btns {
   margin: 0 10px;
@@ -266,5 +350,13 @@ export default {
 }
 .tool-btns > .list-btn:hover {
   background-position: -42px -98px;
+}
+.player-list-dialog {
+  height: 500px;
+}
+</style>
+<style>
+.player-box .el-dialog__body {
+  padding: 0 !important;
 }
 </style>

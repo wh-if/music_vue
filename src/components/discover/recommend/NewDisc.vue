@@ -8,26 +8,25 @@ export default {
     const axios = inject("axios");
     //新碟上架
     let cdList = await axios.get("/album/newest").then((res) => {
-      return res.albums.slice(0,10);
+      return res.albums.slice(0, 10);
     });
-
-    let arrow = ref(0);
-    let cdToogle = ref(true);
+    const transBox = ref(null);
+    const currTrans = ref(0);
 
     function handleArrow(n) {
-      if (n === 0) {
-        arrow.value = cdToogle.value ? 1 : 0;
-      } else {
-        arrow.value = cdToogle.value ? 0 : 1;
+      if (n === "left" && currTrans.value > -700) {
+        currTrans.value = currTrans.value - 140;
+        transBox.value.style.transform = `translate(${currTrans.value}px)`;
+      } else if (n === "right" && currTrans.value < 0) {
+        currTrans.value = currTrans.value + 140;
+        transBox.value.style.transform = `translate(${currTrans.value}px)`;
       }
-      cdToogle.value = !cdToogle.value;
     }
 
     return {
       cdList,
-      cdToogle,
       handleArrow,
-      arrow,
+      transBox,
     };
   },
 };
@@ -35,49 +34,26 @@ export default {
 
 <template>
   <section>
-    <SingleSectionBar title="新碟上架" />
+    <SingleSectionBar title="新碟上架" href="/discover/album" />
     <div class="cd-box">
-      <el-button type="text" class="arrow-left" @click="handleArrow(0)"
+      <el-button type="text" class="arrow-left" @click="handleArrow('left')"
         ><i class="el-icon-arrow-left" style="color: red"
       /></el-button>
-      <div class="transition-box">
-        <transition :name="arrow === 0 ? 'left' : 'right'">
-          <div v-if="cdToogle" class="cd-list">
-            <div
-              class="cd-list-item"
-              v-for="item in cdList.slice(0, 5)"
-              :key="item.id"
-            >
-              <div class="cd-list-item-img-div">
-                <img width="100" :src="item.picUrl" />
-              </div>
-              <p class="text-overflow">{{ item.name }}</p>
-              <p class="text-overflow" style="color: gray">
-                {{ item.artist.name }}
-              </p>
+      <div class="content-box">
+        <div ref="transBox" class="transition-box">
+          <div class="cd-list-item" v-for="item in cdList" :key="item.id">
+            <div class="cd-list-item-img-div">
+              <img width="100" :src="item.picUrl" />
             </div>
+            <p class="text-overflow">{{ item.name }}</p>
+            <p class="text-overflow" style="color: gray">
+              {{ item.artist.name }}
+            </p>
           </div>
-        </transition>
-        <transition :name="arrow === 1 ? 'left' : 'right'">
-          <div v-if="!cdToogle" class="cd-list">
-            <div
-              class="cd-list-item"
-              v-for="item in cdList.slice(5)"
-              :key="item.id"
-            >
-              <div class="cd-list-item-img-div">
-                <img width="100" :src="item.picUrl" />
-              </div>
-              <p class="text-overflow">{{ item.name }}</p>
-              <p class="text-overflow" style="color: gray">
-                {{ item.artist.name }}
-              </p>
-            </div>
-          </div>
-        </transition>
+        </div>
       </div>
 
-      <el-button class="arrow-right" type="text" @click="handleArrow(1)"
+      <el-button class="arrow-right" type="text" @click="handleArrow('right')"
         ><i class="el-icon-arrow-right" style="color: red"
       /></el-button>
     </div>
@@ -106,20 +82,21 @@ export default {
   top: 40%;
   right: 5px;
 }
-.transition-box {
+.content-box {
   position: relative;
   margin: auto 38px;
   width: 760px;
   height: 176px;
   overflow: hidden;
 }
-.cd-list {
-  position: absolute;
-  left: 0;
+.transition-box {
+  display: flex;
+  justify-content: space-between;
+  transform: translate(0);
+  transition: all 1s linear;
 }
 .cd-list-item {
-  margin: 10px 10px;
-  display: inline-block;
+  margin: 10px;
 }
 .cd-list-item > p {
   font-size: 0.9em;
@@ -127,7 +104,7 @@ export default {
 }
 .cd-list-item-img-div {
   width: 120px;
-  background-image: url('../../../assets/coverall.png');
+  background-image: url("../../../assets/coverall.png");
   background-position: 0 -570px;
 }
 .text-overflow {
@@ -135,21 +112,5 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.left-enter-active,
-.left-leave-active,
-.right-enter-active,
-.right-leave-active {
-  transition: all 1s linear;
-}
-
-.left-enter-from,
-.left-leave-to {
-  left: -760px;
-}
-.right-enter-from,
-.right-leave-to {
-  left: 760px;
 }
 </style>

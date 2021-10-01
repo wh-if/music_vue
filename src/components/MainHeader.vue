@@ -1,5 +1,5 @@
 <script>
-import { computed, reactive, ref } from "vue";
+import { computed, watch, reactive, ref } from "vue";
 import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 
@@ -24,14 +24,9 @@ export default {
       { name: "音乐人", route: "/musician" },
     ]);
     const route = useRoute();
-
-    const store = useStore();
     const router = useRouter();
+    const store = useStore();
     const keyword = ref("");
-
-    function showLoginDialog() {
-      store.commit("openLoginDialog");
-    }
 
     const subHeader = computed(() => {
       return "/" === route.path || route.path.startsWith("/discover")
@@ -39,18 +34,35 @@ export default {
         : [];
     });
 
-    const avatarUrl = computed(() => {
-      let profile = JSON.parse(sessionStorage.getItem("profile"));
-      return profile ? profile.avatarUrl : "";
-    });
+    const avatarUrl = ref("");
+    watch(
+      () => store.state.loginStatus,
+      (isLogin) => {
+        if (isLogin) {
+          let profile = JSON.parse(sessionStorage.getItem("profile") || "{}");
+          avatarUrl.value = profile.avatarUrl;
+        }
+      },
+      {
+        immediate: true,
+      }
+    );
+
+    function handleSearch() {
+      router.push("/search?keywords=" + keyword.value + "&type=1");
+    }
+    function handleCreator() {
+      window.location.href =
+        "https://music.163.com/#/creatorcenter?module=creatorcenter";
+    }
 
     return {
       menu,
       keyword,
-      showLoginDialog,
       avatarUrl,
       subHeader,
-      router,
+      handleSearch,
+      handleCreator,
     };
   },
 };
@@ -78,9 +90,12 @@ export default {
         placeholder="音乐/歌手/用户"
         prefix-icon="el-icon-search"
         size="small"
+        @keyup.enter="handleSearch"
         v-model="keyword"
       />
-      <el-button round size="small">创作者中心</el-button>
+      <el-button round size="small" @click="handleCreator"
+        >创作者中心</el-button
+      >
 
       <el-avatar
         v-show="avatarUrl"
@@ -88,7 +103,10 @@ export default {
         :size="40"
         :src="avatarUrl"
       />
-      <el-button type="text" @click="showLoginDialog" v-show="!avatarUrl"
+      <el-button
+        type="text"
+        @click="$store.commit('changeLoginDialog', { type: true })"
+        v-show="!avatarUrl"
         >登录</el-button
       >
     </div>

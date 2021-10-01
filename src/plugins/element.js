@@ -1,4 +1,4 @@
-import { ElButton, ElImage, ElTable, ElSlider, ElLoading, ElSubmenu, ElButtonGroup, ElPagination, ElCheckbox, ElMessage, ElTableColumn, ElDialog, ElForm, ElFormItem, ElBacktop, ElLink, ElDivider, ElIcon, ElMenu, ElCarousel, ElCarouselItem, ElMenuItem, ElHeader, ElContainer, ElMain, ElFooter, ElInput, ElAvatar } from 'element-plus'
+import { ElButton, ElImage, ElTable, ElDrawer, ElTag, ElEmpty, ElSlider, ElTabPane, ElTabs, ElLoading, ElSubmenu, ElButtonGroup, ElPagination, ElCheckbox, ElMessage, ElTableColumn, ElDialog, ElForm, ElFormItem, ElBacktop, ElLink, ElDivider, ElIcon, ElMenu, ElCarousel, ElCarouselItem, ElMenuItem, ElHeader, ElContainer, ElMain, ElFooter, ElInput, ElAvatar } from 'element-plus'
 
 export default (app) => {
   app.use(ElButton)
@@ -20,13 +20,18 @@ export default (app) => {
   app.use(ElTable)
   app.use(ElTableColumn)
   app.use(ElDialog)
+  app.use(ElEmpty)
   app.use(ElMessage)
   app.use(ElLoading)
+  app.use(ElDrawer)
   app.use(ElPagination)
   app.use(ElForm)
   app.use(ElFormItem)
   app.use(ElButtonGroup)
+  app.use(ElTag)
   app.use(ElCheckbox)
   app.use(ElSubmenu)
   app.use(ElSlider)
+  app.use(ElTabPane)
+  app.use(ElTabs)
 }

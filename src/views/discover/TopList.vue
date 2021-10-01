@@ -2,9 +2,10 @@
 import Comment from "../../components/SingleComment.vue";
 import SideBar from "../../components/discover/toplist/SideBar.vue";
 import SongList from "../../components/discover/toplist/SongList.vue";
+import Loading from "../../components/Loading.vue";
 export default {
   name: "TopList",
-  components: { SideBar, Comment, SongList },
+  components: { SideBar, Comment, SongList, Loading },
   setup() {},
 };
 </script>
@@ -21,11 +22,7 @@ export default {
       </div>
     </template>
     <template v-slot:fallback>
-      <div
-        style="width: 100%; height: 700px"
-        v-loading="true"
-        element-loading-text="拼命加载中..."
-      ></div>
+      <Loading />
     </template>
   </Suspense>
 </template>

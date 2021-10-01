@@ -1,11 +1,13 @@
 <script>
 import { inject } from "@vue/runtime-core";
 import SingleSectionBar from "../../SingleSectionBar.vue";
+import { useStore } from "vuex";
 export default {
   components: { SingleSectionBar },
   name: "TopList",
   async setup() {
     const axios = inject("axios");
+    const store = useStore();
     //飙升榜单
     let hotTopList = await axios
       .get("/playlist/detail?id=19723756")
@@ -27,10 +29,19 @@ export default {
         return res.playlist;
       });
     originTopList.tracks = originTopList.tracks.slice(0, 10);
+
+    //添加到播放列表
+    function handlePlayList(val) {
+      let s = val.trackIds.map((item) => item.id);
+      store.commit("changePlaySongList", {
+        source: s,
+      });
+    }
     return {
       hotTopList,
       newTopList,
       originTopList,
+      handlePlayList,
     };
   },
 };
@@ -38,7 +49,7 @@ export default {
 
 <template>
   <section>
-    <SingleSectionBar title="榜单" />
+    <SingleSectionBar title="榜单" href="/discover/toplist" />
     <div class="toplist-box">
       <el-table :data="hotTopList.tracks" class="toplist-table" stripe>
         <el-table-column type="index" align="right" />
@@ -48,7 +59,10 @@ export default {
               <img width="80" :src="hotTopList.coverImgUrl" />
               <span class="header-title">{{ hotTopList.name }}</span>
               <span class="header-btns">
-                <i class="el-icon-video-play" />
+                <i
+                  class="el-icon-video-play"
+                  @click="handlePlayList(hotTopList)"
+                />
                 <i class="el-icon-star-off" />
               </span>
             </div>
@@ -71,7 +85,10 @@ export default {
               <img width="80" :src="newTopList.coverImgUrl" />
               <span class="header-title">{{ newTopList.name }}</span>
               <span class="header-btns">
-                <i class="el-icon-video-play" />
+                <i
+                  class="el-icon-video-play"
+                  @click="handlePlayList(newTopList)"
+                />
                 <i class="el-icon-star-off" />
               </span>
             </div>
@@ -96,7 +113,10 @@ export default {
                 originTopList.name
               }}</span>
               <span class="header-btns">
-                <i class="el-icon-video-play" />
+                <i
+                  class="el-icon-video-play"
+                  @click="handlePlayList(originTopList)"
+                />
                 <i class="el-icon-star-off" />
               </span>
             </div>

@@ -9,8 +9,7 @@ export default function (app) {
   let config = {
     baseURL: 'http://localhost:3000',
     timeout: 60 * 1000, // Timeout
-    // withCredentials: true, // Check cross-site Access-Control
-    // withCredentials: true,
+    withCredentials: true,
   };
 
   const _axios = axios.create(config);
@@ -18,17 +17,12 @@ export default function (app) {
   _axios.interceptors.request.use(
     function (config) {
 
-      let tag = '?', cookie = sessionStorage.getItem('cookie');
+      let tag = '?', token = sessionStorage.getItem('token');
       if (config.url.includes('?'))
         tag = '&'
-      if (cookie !== '')
-        config.url += tag + 'timestamp=' + Date.now() + '&cookie=' + cookie;
+      if (token !== '')
+        config.url += tag + 'timestamp=' + Date.now() + '&token=' + token;
 
-      //   const token = Vue.ls.get(ACCESS_TOKEN)
-      const token = localStorage.getItem('token')
-      if (token) {
-        config.headers['token'] = token // 让每个请求携带自定义 token 请根据实际情况自行修改
-      }
       return config;
     },
     function (error) {

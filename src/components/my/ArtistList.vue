@@ -1,27 +1,23 @@
 <script>
-import { inject, onMounted, reactive } from "@vue/runtime-core";
+import { inject, ref } from "@vue/runtime-core";
 export default {
   name: "ArtistList",
-  setup() {
+  async setup() {
     const axios = inject("axios");
-    const state = reactive({ data: {} });
-    onMounted(async () => {
-      state.data = await axios.get("/artist/sublist");
-    });
+    const data = ref({});
+
+    data.value = await axios.get("/artist/sublist");
+
     return {
-      state,
+      data,
     };
   },
 };
 </script>
 <template>
-  <h2 class="head">我的歌手（{{ state.data.count }}）</h2>
+  <h2 class="head">我的歌手（{{ data.count }}）</h2>
   <ul class="list">
-    <li
-      v-for="item in state.data.data"
-      :key="item.id"
-      style="position: relative"
-    >
+    <li v-for="item in data.data" :key="item.id" style="position: relative">
       <img width="80" :src="item.picUrl" :alt="item.name" />
       <h3 class="item-name">{{ item.name }}</h3>
       <p class="item-info">{{ item.albumSize }}个专辑、{{ item.mvSize }}个MV</p>

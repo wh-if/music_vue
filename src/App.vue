@@ -3,15 +3,15 @@
   <router-view></router-view>
   <MainFooter />
   <el-backtop />
-  <LoginDialog/>
-  <MusicPlayer/>
+  <LoginDialog />
+  <MusicPlayer />
 </template>
 
 <script>
-import LoginDialog from './components/LoginDialog.vue';
+import LoginDialog from "./components/LoginDialog.vue";
 import MainFooter from "./components/MainFooter.vue";
 import MainHeader from "./components/MainHeader.vue";
-import MusicPlayer from './components/MusicPlayer.vue';
+import MusicPlayer from "./components/MusicPlayer.vue";
 export default {
   name: "App",
   components: {
@@ -35,5 +35,10 @@ body {
   min-width: 1180px;
   background-color: #f5f5f5;
 }
-
+.el-dialog__header {
+  background-color: #242424 !important;
+}
+.el-dialog__title {
+  color: white !important;
+}
 </style>

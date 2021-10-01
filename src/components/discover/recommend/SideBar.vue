@@ -1,5 +1,5 @@
 <script>
-import { inject } from "@vue/runtime-core";
+import { inject, shallowRef, watch } from "@vue/runtime-core";
 import { useStore } from "vuex";
 export default {
   name: "SideBar",
@@ -12,20 +12,29 @@ export default {
     let djList = await axios.get("/dj/toplist?limit=5").then((res) => {
       return res.toplist;
     });
-    function showLoginDialog() {
-      store.commit("openLoginDialog");
-    }
-    function test() {
-      axios.get("/user/account?uid=81233558").then((res) => {
-        sessionStorage.setItem("account", JSON.stringify(res.account));
-        sessionStorage.setItem("profile", JSON.stringify(res.profile));
-      });
-    }
+    const userData = shallowRef(null);
+    watch(
+      () => store.state.loginStatus,
+      (isLogin) => {
+        if (isLogin) {
+          let profile = JSON.parse(sessionStorage.getItem("profile"));
+          userData.value = {
+            avatarUrl: profile.avatarUrl,
+            name: profile.nickname,
+          };
+        } else {
+          userData.value = null;
+        }
+      },
+      {
+        immediate: true,
+      }
+    );
+
     return {
       singerList,
       djList,
-      showLoginDialog,
-      test,
+      userData,
     };
   },
 };
@@ -34,20 +43,26 @@ export default {
 <template>
   <div class="side-bar">
     <div class="tologin">
-      <span>登录网易云音乐，可以享受无限收藏的乐趣，并且无限同步到手机</span>
-      <el-button
-        style="width: 100px"
-        @click="showLoginDialog"
-        type="danger"
-        size="small"
-      >
-        登录
-      </el-button>
+      <template v-if="userData == null">
+        <span>登录网易云音乐，可以享受无限收藏的乐趣，并且无限同步到手机</span>
+        <el-button
+          style="width: 100px"
+          @click="$store.commit('changeLoginDialog', { type: true })"
+          type="danger"
+          size="small"
+        >
+          登录
+        </el-button>
+      </template>
+      <template v-else>
+        <el-avatar :size="60" :src="userData.avatarUrl" />
+        <h3>{{ userData.name }}</h3>
+      </template>
     </div>
     <div class="box">
       <div class="bar">
         <span>入驻歌手</span>
-        <el-link class="right" type="info"
+        <el-link class="right" type="info" href="/discover/artist"
           >查看全部<i class="el-icon-arrow-right" />
         </el-link>
       </div>
@@ -64,14 +79,14 @@ export default {
           }}</span>
         </li>
       </ul>
-      <el-button style="display: block; margin: auto" @click="test">
+      <!-- <el-button style="display: block; margin: auto">
         申请成为网易音乐人
-      </el-button>
+      </el-button> -->
     </div>
     <div class="box">
       <div class="bar">
         <span>热门主播</span>
-        <el-link class="right" type="info"
+        <el-link class="right" type="info" href="javascript:;"
           >查看全部<i class="el-icon-arrow-right" />
         </el-link>
       </div>

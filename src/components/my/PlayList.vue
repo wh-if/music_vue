@@ -1,24 +1,24 @@
 <script>
-import { inject, shallowReactive, watch } from "@vue/runtime-core";
-import { useRoute } from "vue-router";
+import { inject, shallowRef, watch } from "@vue/runtime-core";
 import { useStore } from "vuex";
 export default {
-  name: "SongList",
-  async setup() {
+  name: "PlayList",
+  props: {
+    propData: {
+      type: Object,
+      required: true,
+    },
+  },
+  async setup(props) {
     const axios = inject("axios");
-    const route = useRoute();
-    const state = shallowReactive({ songList: {} });
+    const songList = shallowRef({}); //榜单对象
     const store = useStore();
     watch(
-      () => route.query,
-      async (query) => {
-        // console.log(query);
-        state.songList = await axios
-          .get("/playlist/detail?id=" + (query.id || "19723756"))
+      () => props.propData.id,
+      async (id) => {
+        songList.value = await axios
+          .get("/playlist/detail?id=" + id)
           .then((res) => res.playlist);
-        for (let i = 0; i < 3; i++) {
-          state.songList.tracks[i].al.picIsShow = true;
-        }
       },
       {
         immediate: true,
@@ -26,30 +26,41 @@ export default {
     );
     //添加到播放列表
     function handlePlayList() {
-      let s = state.songList.trackIds.map((item) => item.id);
+      let s = songList.value.tracks.map((item) => item.id);
       store.commit("changePlaySongList", {
         source: s,
       });
     }
-
     return {
-      state,
+      songList,
       handlePlayList,
     };
   },
 };
 </script>
+
 <template>
-  <div class="song-title">
-    <img
-      class="left"
-      :src="state.songList.coverImgUrl"
-      :alt="state.songList.name"
-    />
-    <div class="right">
-      <h2>{{ state.songList.name }}</h2>
-      <p style="color: gray">{{ state.songList.description }}</p>
-      <div class="btns">
+  <div class="list-info">
+    <div style="flex: 1">
+      <el-image :src="propData.coverImgUrl"></el-image>
+    </div>
+    <div style="flex: 2">
+      <div class="box1">
+        <span class="icon"></span>
+        <h2 style="display: inline-block">
+          {{ propData.name }}
+        </h2>
+      </div>
+      <div class="box2">
+        <el-image class="img" :src="propData.creator.avatarUrl"></el-image>
+        <el-link class="nickname">
+          {{ propData.creator.nickname }}
+        </el-link>
+        <span class="time">
+          {{ new Date(propData.createTime).toLocaleString() }}创建
+        </span>
+      </div>
+      <div class="box3">
         <el-button-group>
           <el-button
             type="primary"
@@ -67,20 +78,30 @@ export default {
         <el-button size="small" icon="el-icon-share"></el-button>
         <el-button size="small" icon="el-icon-chat-line-round"></el-button>
       </div>
+      <div v-if="propData.tags.length !== 0" class="box4">
+        标签：
+        <el-tag
+          type="info"
+          style="margin: 0 5px"
+          v-for="(item, index) in propData.tags"
+          :key="index"
+          >{{ item }}</el-tag
+        >
+      </div>
+      <div v-if="propData.description" class="box5">
+        介绍： {{ propData.description }}
+      </div>
     </div>
   </div>
   <div class="song-list">
     <div class="list-head">
       <h2>歌曲列表</h2>
-      <span class="list-head-song-count"
-        >{{ state.songList.trackCount }}首歌</span
-      >
+      <span class="list-head-song-count">{{ propData.trackCount }}首歌</span>
       <span class="list-head-song-playcount"
-        >播放:
-        <span style="color: red">{{ state.songList.playCount }}</span> 次</span
+        >播放: <span style="color: red">{{ propData.playCount }}</span> 次</span
       >
     </div>
-    <el-table size="mini" :data="state.songList.tracks">
+    <el-table size="mini" :data="songList.tracks">
       <el-table-column type="index"> </el-table-column>
       <el-table-column label="标题">
         <template #default="scope">
@@ -113,26 +134,51 @@ export default {
     </el-table>
   </div>
 </template>
+
 <style scoped>
-.song-title {
-  height: 230px;
-  padding: 10px 20px 10px;
+.list-info {
   display: flex;
-  justify-content: left;
 }
-.song-title > .left {
-  margin: 20px 10px;
-  width: 150px;
-  height: 150px;
+.box1,
+.box2,
+.box3,
+.box4 {
+  height: 40px;
+  margin: 5px 20px;
 }
-.song-title > .right {
-  margin: 20px 10px;
+.box1 > .icon {
+  display: inline-block;
+  background-image: url("../../assets/icon.png");
+  background-position: 0 -243px;
+  width: 54px;
+  height: 24px;
 }
-.song-title > .right > * {
-  margin: 8px;
+.box1 > h2 {
+  margin-left: 10px;
+  line-height: 40px;
 }
-.btns > * {
-  margin: 15px;
+.box2 > .img {
+  width: 40px;
+  height: 40px;
+}
+.box2 > .nickname,
+.box2 > .time {
+  vertical-align: top;
+  line-height: 40px;
+  margin: 0 10px;
+}
+.box2 > .time {
+  color: gray;
+  font-size: 0.8rem;
+  margin: 0 30px;
+}
+.box3 > * {
+  margin: 5px 15px 5px 0;
+}
+.box4,
+.box5 {
+  color: gray;
+  margin: 5px 20px;
 }
 .list-head {
   overflow: hidden;
@@ -163,3 +209,4 @@ export default {
   overflow: hidden;
 }
 </style>
+
